@@ -1,0 +1,6 @@
+Function = { FunctionIdent ~ "(" ~ (Identifier ~ ("," ~ " "?)?)+ ~ ")" }
+FunctionIdent = { "Sum" | "Product" }
+Identifier = { alpha ~ digit }
+
+digit = _{ '0'..'9' }
+alpha = _{ 'A'..'Z' }
