@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
+use std::rc::Rc;
 use std::sync::atomic::AtomicU64;
 
 pub type Id = u64;
@@ -12,9 +13,16 @@ fn generateId() -> Id {
 pub trait GraphNode: std::fmt::Debug {
     fn id(&self) -> Id;
     fn value(&self, graph: &Graph) -> f32;
+    fn set_value(&mut self, value: f32) -> bool;
 }
 
-#[derive(Debug)]
+impl PartialEq for dyn GraphNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.id() == other.id()
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
 pub struct ValueNode {
     id: Id,
     value: f32,
@@ -37,9 +45,14 @@ impl GraphNode for ValueNode {
     fn value(&self, _: &Graph) -> f32 {
         self.value
     }
+
+    fn set_value(&mut self, value: f32) -> bool {
+        self.value = value;
+        true
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct SumNode {
     id: Id,
 }
@@ -70,9 +83,13 @@ impl GraphNode for SumNode {
 
         return acc;
     }
+
+    fn set_value(&mut self, _: f32) -> bool {
+        false
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Graph {
     pub nodes: HashMap<Id, Box<dyn GraphNode>>,
     /// (Source, End)
@@ -106,6 +123,13 @@ impl Graph {
         match self.nodes.get(&id) {
             Some(node) => Some(node.value(&self)),
             None => None,
+        }
+    }
+
+    pub fn set_node_value(&mut self, id: Id, value: f32) -> bool {
+        match self.nodes.get_mut(&id) {
+            Some(node) => node.set_value(value),
+            None => false,
         }
     }
 
